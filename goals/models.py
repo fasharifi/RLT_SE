@@ -14,6 +14,7 @@ class Goal(models.Model):
     deadline = models.DateField()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
+
 class GoalBook(models.Model):
     goal = models.ForeignKey(Goal, on_delete=models.CASCADE)
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
