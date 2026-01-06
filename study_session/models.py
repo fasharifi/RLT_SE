@@ -1,7 +1,8 @@
 import uuid
+
+from django.contrib.auth.models import User
 from django.db import models
 from books.models import Book
-from accounts.models import Account
 
 
 # Create your models here.
@@ -13,5 +14,4 @@ class StudySession(models.Model):
     end_time = models.DateTimeField()
     pages_read = models.PositiveIntegerField()
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
-    account = models.ForeignKey(Account, on_delete=models.CASCADE)
-
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
