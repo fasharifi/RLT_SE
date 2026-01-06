@@ -1,6 +1,7 @@
 import uuid
+
+from django.contrib.auth.models import User
 from django.db import models
-from accounts.models import Account
 from books.models import Book
 
 
@@ -11,7 +12,7 @@ class Goal(models.Model):
     target_value = models.IntegerField()
     progress = models.DecimalField(max_digits=5, decimal_places=2)
     deadline = models.DateField()
-    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
 class GoalBook(models.Model):
     goal = models.ForeignKey(Goal, on_delete=models.CASCADE)
