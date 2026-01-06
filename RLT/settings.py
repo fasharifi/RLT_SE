@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'books',
     'goals',
     'notes',
-    'sessions',
+    'study_session',
+
 ]
 
 MIDDLEWARE = [
