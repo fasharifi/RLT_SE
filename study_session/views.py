@@ -1,3 +1,9 @@
-from django.shortcuts import render
+from rest_framework import viewsets, permissions
+from .models import StudySession
+from .serializers import StudySessionSerializer
 
-# Create your views here.
+
+class StudySessionViewSet(viewsets.ModelViewSet):
+    queryset = StudySession.objects.all()
+    serializer_class = StudySessionSerializer
+    permission_classes = [permissions.IsAuthenticated]
