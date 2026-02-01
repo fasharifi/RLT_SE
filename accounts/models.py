@@ -33,8 +33,6 @@ class Role(models.Model):
         return self.permissions.filter(name=permission).exists()
 
 
-
-
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
     first_name = models.CharField(max_length=45, null=True, blank=False)
@@ -48,3 +46,13 @@ class Profile(models.Model):
 
     def __str__(self):
         return f"{self.user.username}"
+
+
+class SMSVerification(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    code = models.CharField(max_length=6)
+    is_verified = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.code}"
