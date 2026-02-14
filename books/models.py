@@ -1,4 +1,6 @@
 import uuid
+
+from django.contrib.auth.models import User
 from django.db import models
 
 
@@ -42,5 +44,17 @@ class BookContribution(models.Model):
 
     class Meta:
         unique_together = ('role', 'contributor', 'book')
+
+
+class ReadingList(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="in_reading_lists")
+    pages_read = models.PositiveIntegerField(default=0)
+    total_hours = models.FloatField(default=0.0)  # total hours spent reading
+    added_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'book')
 
 

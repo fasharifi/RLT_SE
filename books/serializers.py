@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Book, Category, Contributor, Role, BookContribution
+from .models import Book, Category, Contributor, Role, BookContribution, ReadingList
+
 
 # Serializer for Category
 class CategorySerializer(serializers.ModelSerializer):
@@ -68,3 +69,17 @@ class BookSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
+
+
+class ReadingListSerializer(serializers.ModelSerializer):
+    book = BookSerializer(read_only=True)  # Show full book details
+
+    class Meta:
+        model = ReadingList
+        fields = ['id', 'book', 'pages_read', 'total_hours', 'added_at', 'updated_at']
+
+# Serializer for creating/updating a reading list entry
+class ReadingListCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReadingList
+        fields = ['book', 'pages_read', 'total_hours']
