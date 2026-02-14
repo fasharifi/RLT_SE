@@ -9,6 +9,7 @@ from .JWT import PhoneTokenSerializer
 from .serializers import RegisterSerializer, LoginSerializer, ProfileSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Profile, SMSVerification
+from .utils import send_sms_to_user
 
 """
 class RegisterView(generics.CreateAPIView):
@@ -72,7 +73,8 @@ class UserViewSet(viewsets.ViewSet):
         profile = Profile.objects.get(user=user)
         #verification = SMSVerification.objects.get(user=user)
 
-        #send_sms(profile.phone_number, verification.code)
+
+        #send_sms_to_user(profile.phone_number, verification.code)
 
         return Response(
             {"message": "Account created. Verification code sent."},
