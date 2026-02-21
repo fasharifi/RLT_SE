@@ -1,13 +1,14 @@
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.db.models import Q
 from .models import Book, Category, Contributor, Role, BookContribution, ReadingList
 from .serializers import BookSerializer, CategorySerializer, ContributorSerializer, BookContributionSerializer, \
     ReadingListCreateSerializer, ReadingListSerializer
 
 
 class BookViewSet(viewsets.ViewSet):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     # 1️⃣ Add a new book
     @action(detail=False, methods=['post'])
@@ -47,6 +48,37 @@ class BookViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get'])
     def list_books(self, request):
         books = Book.objects.all()
+
+        # --- Filters ---
+        category_id = request.query_params.get('category_id')
+        publisher_id = request.query_params.get('publisher_id')  # contributor id
+        search = request.query_params.get('search')
+
+        if category_id:
+            books = books.filter(category__id=category_id)
+
+        if publisher_id:
+            # filter by BookContribution where role is publisher
+            books = books.filter(
+                bookcontribution__role__title__iexact='publisher',
+                bookcontribution__contributor__id=publisher_id
+            )
+
+        # --- Search ---
+        if search:
+            books = books.filter(
+                Q(name__icontains=search) |
+                Q(bookcontribution__role__title__iexact='author',
+                  bookcontribution__contributor__firstname__icontains=search) |
+                Q(bookcontribution__role__title__iexact='author',
+                  bookcontribution__contributor__lastname__icontains=search) |
+                Q(bookcontribution__role__title__iexact='publisher',
+                  bookcontribution__contributor__firstname__icontains=search) |
+                Q(bookcontribution__role__title__iexact='publisher',
+                  bookcontribution__contributor__lastname__icontains=search)
+            )
+
+        books = books.distinct()
         serializer = BookSerializer(books, many=True)
         return Response(serializer.data)
 
@@ -118,3 +150,21 @@ class ReadingListViewSet(viewsets.ViewSet):
             return Response({"message": "Book removed from reading list"}, status=status.HTTP_204_NO_CONTENT)
         except ReadingList.DoesNotExist:
             return Response({"error": "Entry not found"}, status=status.HTTP_404_NOT_FOUND)
+
+class CategoryViewSet(viewsets.ViewSet):
+
+    @action(detail=False, methods=['get'])
+    def categories(self, request):
+        from .models import Category
+        return Response([{"id": c.id, "title": c.title} for c in Category.objects.all()])
+
+class ContributionViewSet(viewsets.ViewSet):
+
+    @action(detail=False, methods=['get'])
+    def publishers(self, request):
+        from .models import Contributor, Role
+        publisher_role = Role.objects.filter(title__iexact='publisher').first()
+        if not publisher_role:
+            return Response([])
+        publishers = Contributor.objects.filter(bookcontribution__role=publisher_role).distinct()
+        return Response([{"id": p.id, "name": f"{p.firstname} {p.lastname}"} for p in publishers])

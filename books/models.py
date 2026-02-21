@@ -21,6 +21,9 @@ class Book(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     total_pages = models.PositiveIntegerField()
 
+    cover_image = models.ImageField(upload_to='book_covers/', null=True, blank=True)
+
+
 
 class Role(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
