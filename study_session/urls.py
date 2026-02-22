@@ -1,7 +1,6 @@
 from rest_framework.routers import DefaultRouter
-from .views import StudySessionViewSet
+from .views import ReadingSessionViewSet
 
 router = DefaultRouter()
-router.register(r'study-sessions', StudySessionViewSet, basename='study-sessions')
-
+router.register(r'sessions', ReadingSessionViewSet, basename='sessions')
 urlpatterns = router.urls
