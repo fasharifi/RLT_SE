@@ -2,7 +2,7 @@ from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q
-from .models import Book, Category, Contributor, Role, BookContribution, ReadingList
+from .models import Book, Category, Contributor, Role, BookContribution, ReadingList, Favorite
 from .serializers import BookSerializer, CategorySerializer, ContributorSerializer, BookContributionSerializer, \
     ReadingListCreateSerializer, ReadingListSerializer
 
@@ -168,3 +168,44 @@ class ContributionViewSet(viewsets.ViewSet):
             return Response([])
         publishers = Contributor.objects.filter(bookcontribution__role=publisher_role).distinct()
         return Response([{"id": p.id, "name": f"{p.firstname} {p.lastname}"} for p in publishers])
+
+class FavoriteViewSet(viewsets.ViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+
+    # Add to favorites
+    @action(detail=False, methods=['post'])
+    def add(self, request):
+        book_id = request.data.get('book')
+
+        try:
+            book = Book.objects.get(pk=book_id)
+        except Book.DoesNotExist:
+            return Response({"error": "Book not found"}, status=404)
+
+        favorite, created = Favorite.objects.get_or_create(
+            user=request.user,
+            book=book
+        )
+
+        if not created:
+            return Response({"error": "Book already in favorites"}, status=400)
+
+        return Response({"message": "Added to favorites"}, status=201)
+
+    # List user favorites
+    @action(detail=False, methods=['get'])
+    def list_entries(self, request):
+        favorites = Favorite.objects.filter(user=request.user)
+        books = [fav.book for fav in favorites]
+        serializer = BookSerializer(books, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    # Remove from favorites
+    @action(detail=True, methods=['delete'])
+    def remove(self, request, pk=None):
+        try:
+            fav = Favorite.objects.get(pk=pk, user=request.user)
+            fav.delete()
+            return Response({"message": "Removed from favorites"}, status=204)
+        except Favorite.DoesNotExist:
+            return Response({"error": "Entry not found"}, status=404)
