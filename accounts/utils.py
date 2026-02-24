@@ -14,6 +14,7 @@ def send_sms_to_user(phone, text):
 
         params = {
             'receptor': phone,
+            'sender': "2000660110",
             'message': text,
         }
 

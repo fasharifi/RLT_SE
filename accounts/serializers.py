@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Profile, Role, Permission, SMSVerification
-from .utils import generate_otp
+from .utils import generate_otp, send_sms_to_user
 
 
 class PermissionSerializer(serializers.ModelSerializer):
@@ -61,10 +61,13 @@ class RegisterSerializer(serializers.ModelSerializer):
             phone_number=validated_data.get('phone_number', ''),
         )
 
-        SMSVerification.objects.create(
+        verification = SMSVerification.objects.create(
             user=user,
             code=generate_otp()
         )
+
+        print(verification.code)
+        #send_sms_to_user(phone_number,verification.code)
 
         return user
 
