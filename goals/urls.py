@@ -1,8 +1,7 @@
 from rest_framework.routers import DefaultRouter
-from .views import GoalViewSet, GoalBookViewSet
+from .views import ReadingGoalViewSet
 
 router = DefaultRouter()
-router.register(r'goals', GoalViewSet, basename='goals')
-router.register(r'goal-books', GoalBookViewSet, basename='goal-books')
+router.register(r'goals', ReadingGoalViewSet, basename='goals')
 
 urlpatterns = router.urls

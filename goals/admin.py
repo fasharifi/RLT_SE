@@ -1,8 +1,8 @@
 from django.contrib import admin
-from .models import Goal, GoalBook
+from .models import ReadingGoal
 
 # Register your models here.
 
 
-admin.site.register(Goal)
-admin.site.register(GoalBook)
+admin.site.register(ReadingGoal)
+
