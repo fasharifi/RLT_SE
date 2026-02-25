@@ -77,3 +77,9 @@ class ReadingGoalViewSet(viewsets.ViewSet):
             "percentage": round(percentage, 2),
             "is_completed": goal.is_completed
         })
+
+    @action(detail=False, methods=['get'])
+    def list_goals(self, request):
+        goals = ReadingGoal.objects.filter(user=request.user).order_by('-created_at')
+        serializer = ReadingGoalSerializer(goals, many=True)
+        return Response(serializer.data)

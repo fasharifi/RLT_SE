@@ -10,11 +10,10 @@ class ReadingGoalSerializer(serializers.ModelSerializer):
             'id',
             'goal_type',
             'target_value',
-            'current_value',
             'is_completed',
             'created_at'
         ]
-        read_only_fields = ['current_value', 'is_completed', 'created_at']
+        read_only_fields = ['is_completed', 'created_at']
 
     def validate(self, data):
         if data['target_value'] <= 0:
