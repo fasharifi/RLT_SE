@@ -73,6 +73,42 @@ class NoteViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['get'])
     def list_notes(self, request):
-        notes = Note.objects.filter(user=request.user)
+        notes = Note.objects.filter(user=request.user).select_related('book', 'session')
         serializer = NoteSerializer(notes, many=True)
-        return Response(serializer.data)
+
+        enhanced_data = []
+        for note, note_data in zip(notes, serializer.data):
+            # Add book information if available
+            if note.book:
+                note_data['book_name'] = getattr(note.book, 'title', getattr(note.book, 'name', 'Unknown Book'))
+                note_data['book_id'] = str(note.book.id)
+                note_data['source_display'] = f"📚 {note_data['book_name']}"
+                note_data['source_type'] = 'book'
+
+            # Add session information if available
+            elif note.session:
+                note_data['session_id'] = str(note.session.id)
+                note_data['session_pages'] = note.session.pages_read
+
+                if note.session.start_time:
+                    date_str = note.session.start_time.strftime('%B %d, %Y')
+                    note_data['session_date'] = date_str
+                    note_data['session_date_formatted'] = note.session.start_time.strftime('%b %d, %Y')
+
+                    if note.session.note:
+                        note_data['session_note'] = note.session.note
+                        note_data['source_display'] = f"📖 {date_str} - {note.session.note[:40]}"
+                    else:
+                        note_data['source_display'] = f"📖 Session on {date_str}"
+                else:
+                    note_data['source_display'] = "📖 Reading Session"
+
+                note_data['source_type'] = 'session'
+
+            else:
+                note_data['source_display'] = "📝 Note"
+                note_data['source_type'] = 'unknown'
+
+            enhanced_data.append(note_data)
+
+        return Response(enhanced_data)
