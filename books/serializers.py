@@ -8,17 +8,20 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = ['id', 'title']
 
+
 # Serializer for Contributor
 class ContributorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contributor
         fields = ['id', 'firstname', 'lastname', 'birthdate', 'country']
 
+
 # Serializer for Role
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
         fields = ['id', 'title']
+
 
 # Serializer for BookContribution
 class BookContributionSerializer(serializers.ModelSerializer):
@@ -29,6 +32,7 @@ class BookContributionSerializer(serializers.ModelSerializer):
         model = BookContribution
         fields = ['id', 'contributor', 'role']
 
+
 # Main Book Serializer
 class BookSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
@@ -38,7 +42,6 @@ class BookSerializer(serializers.ModelSerializer):
     authors = serializers.SerializerMethodField()
     publishers = serializers.SerializerMethodField()
     translators = serializers.SerializerMethodField()
-
 
     class Meta:
         model = Book
@@ -77,12 +80,10 @@ class BookSerializer(serializers.ModelSerializer):
 
         return book
 
-
     def update(self, instance, validated_data):
         # Update category if provided
         category_data = validated_data.pop('category', None)
         contributions_data = validated_data.pop('bookcontribution_set', None)
-
 
         if category_data:
             category, _ = Category.objects.get_or_create(**category_data)
@@ -122,10 +123,10 @@ class BookSerializer(serializers.ModelSerializer):
 class ReadingListSerializer(serializers.ModelSerializer):
     book = BookSerializer(read_only=True)  # Show full book details
 
-
     class Meta:
         model = ReadingList
         fields = ['id', 'book', 'pages_read', 'total_hours', 'added_at', 'updated_at']
+
 
 # Serializer for creating/updating a reading list entry
 class ReadingListCreateSerializer(serializers.ModelSerializer):
