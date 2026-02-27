@@ -1,5 +1,5 @@
+# models.py
 import uuid
-
 from django.contrib.auth.models import User
 from django.db import models
 
@@ -10,7 +10,7 @@ class Category(models.Model):
     def __str__(self):
         return self.title
 
-# Create your models here.
+
 class Book(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
@@ -20,9 +20,7 @@ class Book(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     total_pages = models.PositiveIntegerField()
-
     cover_image = models.ImageField(upload_to='book_covers/', null=True, blank=True)
-
 
 
 class Role(models.Model):
@@ -42,8 +40,8 @@ class Contributor(models.Model):
 
 class BookContribution(models.Model):
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
-    contributor = models.ForeignKey(Contributor,on_delete=models.CASCADE)
-    book = models.ForeignKey(Book,on_delete=models.CASCADE)
+    contributor = models.ForeignKey(Contributor, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('role', 'contributor', 'book')
@@ -53,7 +51,7 @@ class ReadingList(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="in_reading_lists")
     pages_read = models.PositiveIntegerField(default=0)
-    total_hours = models.FloatField(default=0.0)  # total hours spent reading
+    total_hours = models.FloatField(default=0.0)
     added_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -62,11 +60,10 @@ class ReadingList(models.Model):
 
 
 class Favorite(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)  # ADD THIS
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="favorited_by")
     added_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ('user', 'book')
-
-

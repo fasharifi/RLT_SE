@@ -1,5 +1,6 @@
+# serializers.py
 from rest_framework import serializers
-from .models import Book, Category, Contributor, Role, BookContribution, ReadingList
+from .models import Book, Category, Contributor, Role, BookContribution, ReadingList, Favorite
 
 
 # Serializer for Category
@@ -133,3 +134,14 @@ class ReadingListCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReadingList
         fields = ['book', 'pages_read', 'total_hours']
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Favorite
+        fields = ['id', 'book', 'added_at']
+        read_only_fields = ['id', 'added_at']
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        return Favorite.objects.create(user=user, **validated_data)

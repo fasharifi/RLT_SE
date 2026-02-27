@@ -1,10 +1,13 @@
+# views.py
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q
 from .models import Book, Category, Contributor, Role, BookContribution, ReadingList, Favorite
-from .serializers import BookSerializer, CategorySerializer, ContributorSerializer, BookContributionSerializer, \
-    ReadingListCreateSerializer, ReadingListSerializer
+from .serializers import (
+    BookSerializer, CategorySerializer, ContributorSerializer,
+    BookContributionSerializer, ReadingListCreateSerializer, FavoriteSerializer, ReadingListSerializer
+)
 
 
 class BookViewSet(viewsets.ViewSet):
@@ -42,7 +45,8 @@ class BookViewSet(viewsets.ViewSet):
         # Delete related contributions
         BookContribution.objects.filter(book=book).delete()
         book.delete()
-        return Response({"message": "Book and related contributions deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"message": "Book and related contributions deleted successfully."},
+                        status=status.HTTP_204_NO_CONTENT)
 
     # 4️⃣ List all books
     @action(detail=False, methods=['get'])
@@ -92,6 +96,7 @@ class BookViewSet(viewsets.ViewSet):
         serializer = BookSerializer(book)
         return Response(serializer.data)
 
+
 class ReadingListViewSet(viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -115,7 +120,6 @@ class ReadingListViewSet(viewsets.ViewSet):
 
         return Response(ReadingListSerializer(reading_list).data, status=status.HTTP_201_CREATED)
 
-
     # 2️⃣ Update progress (pages read / hours)
     @action(detail=True, methods=['put'])
     def update_progress(self, request, pk=None):
@@ -132,14 +136,12 @@ class ReadingListViewSet(viewsets.ViewSet):
         entry.save()
         return Response(ReadingListSerializer(entry).data)
 
-
     # 3️⃣ List all reading list entries for the user
     @action(detail=False, methods=['get'])
     def list_entries(self, request):
         entries = ReadingList.objects.filter(user=request.user)
         serializer = ReadingListSerializer(entries, many=True)
         return Response(serializer.data)
-
 
     # 4️⃣ Remove a book from reading list
     @action(detail=True, methods=['delete'])
@@ -151,12 +153,14 @@ class ReadingListViewSet(viewsets.ViewSet):
         except ReadingList.DoesNotExist:
             return Response({"error": "Entry not found"}, status=status.HTTP_404_NOT_FOUND)
 
+
 class CategoryViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['get'])
     def categories(self, request):
         from .models import Category
         return Response([{"id": c.id, "title": c.title} for c in Category.objects.all()])
+
 
 class ContributionViewSet(viewsets.ViewSet):
 
@@ -169,43 +173,49 @@ class ContributionViewSet(viewsets.ViewSet):
         publishers = Contributor.objects.filter(bookcontribution__role=publisher_role).distinct()
         return Response([{"id": p.id, "name": f"{p.firstname} {p.lastname}"} for p in publishers])
 
+
 class FavoriteViewSet(viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     # Add to favorites
     @action(detail=False, methods=['post'])
     def add(self, request):
-        book_id = request.data.get('book')
-
-        try:
-            book = Book.objects.get(pk=book_id)
-        except Book.DoesNotExist:
-            return Response({"error": "Book not found"}, status=404)
-
-        favorite, created = Favorite.objects.get_or_create(
-            user=request.user,
-            book=book
+        serializer = FavoriteSerializer(
+            data=request.data,
+            context={'request': request}
         )
 
-        if not created:
-            return Response({"error": "Book already in favorites"}, status=400)
-
-        return Response({"message": "Added to favorites"}, status=201)
+        if serializer.is_valid():
+            favorite = serializer.save()
+            # Return minimal data
+            return Response({
+                'id': favorite.id,
+                'book': favorite.book.id,
+                'added_at': favorite.added_at
+            }, status=201)
+        return Response(serializer.errors, status=400)
 
     # List user favorites
     @action(detail=False, methods=['get'])
     def list_entries(self, request):
-        favorites = Favorite.objects.filter(user=request.user)
-        books = [fav.book for fav in favorites]
-        serializer = BookSerializer(books, many=True, context={'request': request})
-        return Response(serializer.data)
+        favorites = Favorite.objects.filter(user=request.user).select_related('book')
+
+        # Return minimal data array
+        data = [{
+            'id': fav.id,
+            'book': fav.book.id,
+            'book_name': fav.book.name,  # Add this if you want book name
+            'added_at': fav.added_at
+        } for fav in favorites]
+
+        return Response(data)
 
     # Remove from favorites
     @action(detail=True, methods=['delete'])
     def remove(self, request, pk=None):
         try:
-            fav = Favorite.objects.get(pk=pk, user=request.user)
-            fav.delete()
+            favorite = Favorite.objects.get(pk=pk, user=request.user)
+            favorite.delete()
             return Response({"message": "Removed from favorites"}, status=204)
         except Favorite.DoesNotExist:
             return Response({"error": "Entry not found"}, status=404)
